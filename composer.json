@@ -1,0 +1,24 @@
+{
+    "name": "Langsyne",
+    "description": "A base for building REST APIs on Slim3",
+    "keywords": ["microframework","rest","api", "slim3"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Paul James",
+            "email": "p.james@coolblue.nl",
+            "homepage": "http://devblog.coolblue.nl/"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Langsyne\\": "src/"
+        }
+    },
+    "require": {
+        "php": ">=5.5.0",
+        "slim/slim": "^3.1",
+        "monolog/monolog": "^1.17",
+        "nocarrier/hal": "^0.9.12"
+    }
+}
