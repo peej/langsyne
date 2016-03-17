@@ -4,6 +4,7 @@ namespace Langsyne\Resources;
 
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\UriInterface as Uri;
 use Langsyne\DataStores\DataStoreInterface as DataStore;
 use Langsyne\Validators\ValidatorInterface as Validator;
 use Interop\Container\ContainerInterface;
@@ -71,31 +72,7 @@ class HttpResource {
             $this->data = $this->dataStore->read($args);
         }
 
-        $url = $request->getUri()->getPath();
-        $renderer = $this->container->get('renderer');
-        $router = $this->container->get('router');
-
-        $renderer->setUrl($url);
-        $renderer->setData($this->data);
-
-        foreach ($this->links as $rel => $name) {
-            $attributes = [];
-            $route = $router->getNamedRoute($name);
-            $profile = $route->getCallable()->getProfile();
-            
-            try {
-                $url = $router->pathFor($name, $args);
-            } catch (\InvalidArgumentException $e) {
-                $url = $route->getPattern();
-                $attributes['templated'] = true;
-            }
-            
-            if ($profile) {
-                $attributes['profile'] = $profile;
-            }
-            
-            $renderer->addLink($rel, $url, $attributes);
-        }
+        $renderer = $this->configureRenderer($request->getUri(), $args);
 
         return $renderer->render($response);
     }
@@ -123,5 +100,35 @@ class HttpResource {
         $this->dataStore->remove($args);
 
         return $response->withStatus(204);
+    }
+
+    protected function configureRenderer(Uri $url, array $args) {
+        $renderer = $this->container->get('renderer');
+        $router = $this->container->get('router');
+        $path = $url->getPath();
+
+        $renderer->setUrl($path);
+        $renderer->setData($this->data);
+
+        foreach ($this->links as $rel => $name) {
+            $attributes = [];
+            $route = $router->getNamedRoute($name);
+            $profile = $route->getCallable()->getProfile();
+
+            try {
+                $path = $router->pathFor($name, $args);
+            } catch (\InvalidArgumentException $e) {
+                $path = $route->getPattern();
+                $attributes['templated'] = true;
+            }
+
+            if ($profile) {
+                $attributes['profile'] = $profile;
+            }
+
+            $renderer->addLink($rel, $path, $attributes);
+        }
+
+        return $renderer;
     }
 }

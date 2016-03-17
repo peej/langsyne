@@ -30,13 +30,9 @@ class HttpCollectionResource extends HttpResource {
         }
 
         $data = $this->dataStore->listing($args);
-        $renderer = $this->container->get('renderer');
+        $renderer = $this->configureRenderer($request->getUri(), $args);
         $router = $this->container->get('router');
-
-        $renderer->setUrl($request->getUri()->getPath());
-        $renderer->setData([
-            'count' => count($data)
-        ]);
+        $this->data['count'] = count($data);
 
         foreach ($data as $key => $value) {
             $url = $router->pathFor($this->itemName, array_merge($args, ['id' => $key]));
