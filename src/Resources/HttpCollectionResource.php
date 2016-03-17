@@ -5,35 +5,63 @@ namespace Langsyne\Resources;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Message\ResponseInterface as Response;
 use Langsyne\DataStores\DataStoreInterface as DataStore;
-use Langsyne\Renderers\RendererInterface as Renderer;
 use Langsyne\Validators\ValidatorInterface as Validator;
-use Slim\Router as Router;
 
 class HttpCollectionResource extends HttpResource {
 
-    protected $itemRouteName;
-    protected $router;
+    protected $itemName;
 
-    function __construct(
-        DataStore $dataStore, Renderer $renderer, Validator $validator,
-        Router $router, $itemRouteName
-    ) {
-        parent::__construct($dataStore, $renderer, $validator);
+    /**
+     * @param string $itemName
+     */
+    function __construct($itemName, DataStore $dataStore, Validator $validator = null) {
+        parent::__construct($dataStore, $validator);
 
-        $this->router = $router;
-        $this->itemRouteName = $itemRouteName;
+        $this->itemName = $itemName;
+    }
+
+    public function getMethods() {
+        return ['GET', 'POST'];
     }
 
     public function get(Request $request, Response $response, array $args) {
-        return $this->renderer->render($response, $this->dataStore->listing($args));
+        if (!$this->dataStore) {
+            return $response->withStatus(405);
+        }
+
+        $data = $this->dataStore->listing($args);
+        $renderer = $this->container->get('renderer');
+        $router = $this->container->get('router');
+
+        $renderer->setUrl($request->getUri()->getPath());
+        $renderer->setData([
+            'count' => count($data)
+        ]);
+
+        foreach ($data as $key => $value) {
+            $url = $router->pathFor($this->itemName, array_merge($args, ['id' => $key]));
+
+            $renderer->addLink($this->itemName, $url, [
+                'name' => $key
+            ]);
+            $renderer->addEmbed($this->itemName, $url, $value);
+        }
+
+        return $renderer->render($response);
     }
 
     public function post(Request $request, Response $response, array $args) {
+        if (!$this->dataStore) {
+            return $response->withStatus(405);
+        }
+
         $body = $request->getParsedBody();
+        $router = $this->container->get('router');
+
         $this->validator->validate($body);
         $keys = $this->dataStore->create($args, $body);
-        $url = $this->router->pathFor($this->itemRouteName, $keys);
+        $url = $router->pathFor($this->itemName, $keys);
 
-        return $response->withStatus(204)->withHeader('Location', $url);
+        return $response->withStatus(201)->withHeader('Location', $url);
     }
 }

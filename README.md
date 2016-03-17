@@ -5,7 +5,7 @@ A base for building REST APIs on Slim3
 ## Usage example
 
 ```
-$app = new \Slim\App();
+$app = new \Langsyne\App();
 
 $c = $app->getContainer();
 
@@ -21,14 +21,18 @@ $c['validator.item'] = function ($c) {
     return new Langsyne\Validators\NullValidator();
 };
 
-$itemCollection = new Langsyne\Resources\HttpCollectionResource(
-    $c['datastore.items'], $c['renderer'], $c['validator.item'], $c['router'], 'item'
-);
-$itemResource = new Langsyne\Resources\HttpResource($c['datastore.items'], $c['renderer'], $c['validator.item']);
+$homeResource = new Langsyne\Resources\HttpResource();
+$app->addResource('home', '/', $homeResource)
+    ->addData("message", "Welcome")
+    ->addLink("items")
+    ->addLink("item");
 
-$app->any('/items', $itemCollection)->setName('items');
-$app->any('/items/{id}', $itemResource)->setName('item');
-$app->any('/users/{name}/items/{id}', $itemResource)->setName('user-item');
+$itemCollection = new Langsyne\Resources\HttpCollectionResource('item', $c['datastore.items'], $c['validator.item']);
+$app->addResource('items', '/items', $itemCollection);
+
+$itemResource = new Langsyne\Resources\HttpResource($c['datastore.items'], $c['validator.item']);
+$app->addResource('item', '/items/{id}', $itemResource)
+    ->addLink("home", "up");
 
 $app->run();
 ```
