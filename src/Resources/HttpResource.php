@@ -69,7 +69,7 @@ class HttpResource {
 
     public function get(Request $request, Response $response, array $args) {
         if ($this->dataStore) {
-            $this->data = $this->dataStore->read($args);
+            $this->data = array_merge($this->data, $this->dataStore->read($args));
         }
 
         $renderer = $this->configureRenderer($request->getUri(), $args);
