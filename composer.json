@@ -20,5 +20,8 @@
         "slim/slim": "^3.1",
         "monolog/monolog": "^1.17",
         "nocarrier/hal": "^0.9.12"
+    },
+    "require-dev": {
+        "phpspec/phpspec": "^2.4"
     }
 }
