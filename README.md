@@ -27,7 +27,7 @@ $app->addResource('home', '/', $homeResource)
     ->addLink("items")
     ->addLink("item");
 
-$itemCollection = new Langsyne\Resources\HttpCollectionResource('item', $c['datastore.items'], $c['validator.item']);
+$itemCollection = new Langsyne\Resources\HttpCollection('item', $c['datastore.items'], $c['validator.item']);
 $app->addResource('items', '/items', $itemCollection);
 
 $itemResource = new Langsyne\Resources\HttpResource($c['datastore.items'], $c['validator.item']);

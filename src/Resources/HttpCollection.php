@@ -7,14 +7,14 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Langsyne\DataStores\DataStoreInterface as DataStore;
 use Langsyne\Validators\ValidatorInterface as Validator;
 
-class HttpCollectionResource extends HttpResource {
+class HttpCollection extends HttpResource {
 
     protected $itemName;
 
     /**
      * @param string $itemName
      */
-    function __construct($itemName, DataStore $dataStore, Validator $validator = null) {
+    function __construct($itemName, DataStore $dataStore = null, Validator $validator = null) {
         parent::__construct($dataStore, $validator);
 
         $this->itemName = $itemName;
@@ -54,7 +54,9 @@ class HttpCollectionResource extends HttpResource {
         $body = $request->getParsedBody();
         $router = $this->container->get('router');
 
-        $this->validator->validate($body);
+        if ($this->validator) {
+            $this->validator->validate($body);
+        }
         $keys = $this->dataStore->create($args, $body);
         $url = $router->pathFor($this->itemName, $keys);
 
